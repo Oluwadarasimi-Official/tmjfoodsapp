@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TMJ Foods — Party Rice &amp; Shawarma, Ready on Arrival</title>
+<meta name="description" content="TMJ Foods — pre-order party jollof rice, fried rice and shawarma, pick your outlet and pickup time, pay, and collect with a QR code.">
+<link rel="icon" href="https://vtappsupjgsuzhemypkq.supabase.co/storage/v1/object/public/tmj-foods/logo.png">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <img class="logo" src="https://vtappsupjgsuzhemypkq.supabase.co/storage/v1/object/public/tmj-foods/logo.png" alt="TMJ Foods logo">
+    <div class="brand"><b>TMJ Foods</b><span>PARTY RICE • SHAWARMA • PICKUP</span></div>
+    <button class="cart-btn" id="cartBtn" onclick="showView('cart')">🛒 Cart <span class="n hidden" id="cartCount">0</span></button>
+  </div>
+</header>
+
+<!-- HOME -->
+<main class="wrap" id="view-home">
+  <section class="hero">
+    <img src="https://vtappsupjgsuzhemypkq.supabase.co/storage/v1/object/public/tmj-foods/food/hero-jollof.jpg" alt="Party jollof rice with chicken, plantain and salad">
+    <div class="hero-txt">
+      <div class="eyebrow">TMJ Foods • Order ahead</div>
+      <h1>Party rice &amp; shawarma,<br>ready when you arrive.</h1>
+      <p>Pre-order, pay, pick your outlet and pickup time — then collect with your QR code. No queue, no wait.</p>
+      <a class="hero-cta" href="#menu" onclick="document.getElementById('menu').scrollIntoView({behavior:'smooth'});return false;">See the menu ↓</a>
+      <div class="hero-meta"><span>🕗 Pickup 8:00 AM – 11:00 PM</span><span>🔥 Food stays warm 30 mins</span><span>📍 Ilorin • Lagos • Ibadan • Abuja</span></div>
+    </div>
+  </section>
+
+  <div id="menu">
+    <div class="chips" id="catChips"></div>
+    <h2 class="sec-t">Today's menu</h2>
+    <p class="sec-s">Real photos, real prices. Tap a dish to customise it.</p>
+    <div class="grid" id="menuGrid"></div>
+    <p class="note" id="menuNote"></p>
+  </div>
+  <a class="kit-link" href="kitchen.html">Kitchen staff? Open the <b>kitchen dashboard →</b></a>
+</main>
+
+<!-- CART -->
+<main class="wrap hidden" id="view-cart">
+  <h2 class="sec-t">Your cart</h2>
+  <p class="sec-s">Pickup only — no delivery fee.</p>
+  <div id="cartItems"></div>
+  <div class="totals hidden" id="cartTotals"></div>
+  <button class="cta" id="toCheckout" onclick="showView('checkout')">Proceed to checkout →</button>
+  <button class="cta dark" style="margin-top:10px" onclick="showView('home')">← Keep browsing</button>
+</main>
+
+<!-- CHECKOUT -->
+<main class="wrap hidden" id="view-checkout">
+  <h2 class="sec-t">Checkout</h2>
+  <p class="sec-s">Pick your outlet and pickup time, then pay.</p>
+  <div class="field"><label>Your name</label><input id="coName" placeholder="e.g. David Oluwadarasimi" autocomplete="name"></div>
+  <div class="field"><label>Phone (WhatsApp)</label><input id="coPhone" placeholder="e.g. 07010168667" inputmode="tel" autocomplete="tel"></div>
+  <div class="field"><label>Pickup outlet</label><select id="coOutlet"></select></div>
+  <div class="field"><label>Pickup date</label><select id="coDate"></select></div>
+  <div class="field"><label>Pickup time</label><div class="slots" id="coSlots"></div></div>
+  <div class="field"><label>Payment method</label><div id="payMethods"></div></div>
+  <div class="totals" id="coTotals"></div>
+  <button class="cta" id="payBtn" onclick="placeOrder()">Confirm payment &amp; place order</button>
+  <button class="cta dark" style="margin-top:10px" onclick="showView('cart')">← Back to cart</button>
+  <p class="note">Your order is confirmed once payment succeeds. You will get a QR code to show at the outlet.</p>
+</main>
+
+<!-- CONFIRM -->
+<main class="wrap hidden" id="view-confirm">
+  <div class="ok-card" id="confirmCard"></div>
+  <button class="cta" style="margin-top:14px" onclick="showView('home')">Order more food →</button>
+</main>
+
+<!-- TRACK -->
+<main class="wrap hidden" id="view-track">
+  <h2 class="sec-t">Track your order</h2>
+  <p class="sec-s">Enter the order code from your confirmation (e.g. TMJ-7K2P9Q).</p>
+  <div class="field"><label>Order code</label><input id="trackCode" placeholder="TMJ-XXXXXX" style="text-transform:uppercase"></div>
+  <button class="cta" onclick="trackOrder()">Track order</button>
+  <div id="trackResult" style="margin-top:16px"></div>
+</main>
+
+<!-- MY ORDERS -->
+<main class="wrap hidden" id="view-orders">
+  <h2 class="sec-t">My orders</h2>
+  <p class="sec-s">Enter the phone number you ordered with.</p>
+  <div class="field"><label>Phone</label><input id="myPhone" placeholder="e.g. 07010168667" inputmode="tel"></div>
+  <button class="cta" onclick="loadMyOrders()">Find my orders</button>
+  <div id="myOrders" style="margin-top:16px"></div>
+</main>
+
+<nav class="bottom"><div class="nav-in">
+  <button data-v="home" class="on" onclick="showView('home')"><span class="ico">🍽️</span>Menu</button>
+  <button data-v="cart" onclick="showView('cart')"><span class="ico">🛒</span>Cart</button>
+  <button data-v="track" onclick="showView('track')"><span class="ico">📍</span>Track</button>
+  <button data-v="orders" onclick="showView('orders')"><span class="ico">🧾</span>My orders</button>
+</div></nav>
+
+<div id="sheetRoot"></div>
+<div id="toastRoot"></div>
+<script src="vendor/qrcode.min.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

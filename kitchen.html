@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TMJ Foods — Kitchen Dashboard</title>
+<meta name="description" content="TMJ Foods kitchen dashboard — live orders, prepare, mark ready, validate QR pickup.">
+<link rel="icon" href="https://vtappsupjgsuzhemypkq.supabase.co/storage/v1/object/public/tmj-foods/logo.png">
+<link rel="stylesheet" href="styles.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="supabase-config.js"></script>
+<style>
+  .k-stats{display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin:14px 0}
+  .k-stat{background:#fff; border:1px solid var(--line); border-radius:14px; padding:12px 8px; text-align:center; box-shadow:var(--shadow)}
+  .k-stat b{font-size:20px; display:block; color:var(--brown)}
+  .k-stat span{font-size:11.5px; color:var(--muted)}
+  .k-order{background:#fff; border:1px solid var(--line); border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:var(--shadow)}
+  .k-order.new{border-color:var(--orange); box-shadow:0 0 0 3px #ffe8d9}
+  .k-order .top{display:flex; justify-content:space-between; align-items:center; gap:8px}
+  .k-order .top b{font-size:16px}
+  .k-order .meta{font-size:13px; color:var(--muted); margin-top:4px}
+  .k-order .items{font-size:14px; margin-top:8px; line-height:1.6}
+  .k-actions{display:flex; gap:8px; margin-top:12px}
+  .k-actions button{flex:1; padding:11px 8px; border-radius:10px; font-weight:700; font-size:13.5px}
+  .btn-prep{background:#fff1e6; color:var(--orange); border:1.5px solid #ffd9bd}
+  .btn-ready{background:var(--green); color:#fff}
+  .btn-collect{background:var(--brown); color:#fff}
+  .pin-box{max-width:340px; margin:60px auto; text-align:center; background:#fff; border:1px solid var(--line); border-radius:20px; padding:28px 22px; box-shadow:var(--shadow)}
+  .pin-box img{width:72px; height:72px; border-radius:16px; margin:0 auto 12px}
+  .pin-box input{text-align:center; font-size:22px; letter-spacing:8px; padding:12px; width:100%; border:1.5px solid var(--line); border-radius:12px}
+  .validate{background:#fff; border:1.5px solid var(--orange); border-radius:16px; padding:14px; margin:12px 0; box-shadow:var(--shadow)}
+  .validate .row{display:flex; gap:8px; margin-top:10px}
+  .validate input{flex:1; padding:12px 14px; border:1.5px solid var(--line); border-radius:12px; font-size:15px; text-transform:uppercase}
+  .validate button{background:var(--orange); color:#fff; font-weight:700; padding:12px 18px; border-radius:12px}
+  .live-dot{display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--green); margin-right:6px; animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="top-in">
+    <img class="logo" src="https://vtappsupjgsuzhemypkq.supabase.co/storage/v1/object/public/tmj-foods/logo.png" alt="TMJ Foods logo">
+    <div class="brand"><b>TMJ Kitchen</b><span>LIVE ORDER DASHBOARD</span></div>
+    <a href="index.html" style="margin-left:auto;font-weight:700;font-size:13.5px;color:var(--orange)">← Customer app</a>
+  </div>
+</header>
+
+<!-- PIN -->
+<div class="wrap" id="pinView">
+  <div class="pin-box">
+    <img src="https://vtappsupjgsuzhemypkq.supabase.co/storage/v1/object/public/tmj-foods/logo.png" alt="TMJ Foods">
+    <h2 style="color:var(--brown)">Kitchen access</h2>
+    <p style="color:var(--muted);font-size:13.5px;margin:6px 0 16px">Enter the 4-digit kitchen PIN to open the dashboard.</p>
+    <input id="pinInput" inputmode="numeric" maxlength="4" placeholder="••••" autocomplete="off">
+    <button class="cta" style="margin-top:14px" onclick="unlockKitchen()">Open dashboard</button>
+    <p class="note">Demo PIN: 1234 — change it before going live.</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<main class="wrap hidden" id="dashView">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px">
+    <h2 class="sec-t" style="margin:0"><span class="live-dot"></span>Live orders</h2>
+    <button onclick="fetchOrders()" style="font-weight:700;color:var(--orange);font-size:13.5px">↻ Refresh</button>
+  </div>
+  <div class="k-stats">
+    <div class="k-stat"><b id="stToday">0</b><span>Orders today</span></div>
+    <div class="k-stat"><b id="stReady">0</b><span>Ready to collect</span></div>
+    <div class="k-stat"><b id="stRev">₦0</b><span>Revenue today</span></div>
+  </div>
+
+  <div class="validate">
+    <b style="color:var(--brown)">✅ Validate pickup (QR code)</b>
+    <p style="font-size:12.5px;color:var(--muted)">Scan the customer's QR or type their order code, then mark it collected.</p>
+    <div class="row"><input id="valCode" placeholder="TMJ-XXXXXX"><button onclick="validateCode()">Check</button></div>
+    <div id="valResult" style="margin-top:10px"></div>
+  </div>
+
+  <div class="field"><label>Outlet</label><select id="kOutlet" onchange="fetchOrders()"></select></div>
+  <div id="ordersList"></div>
+  <p class="note">New orders arrive here automatically with a sound alert. Tap a button to move the order along: Paid → Preparing → Ready → Collected.</p>
+</main>
+<div id="toastRoot"></div>
+<script src="kitchen.js"></script>
+</body>
+</html>
